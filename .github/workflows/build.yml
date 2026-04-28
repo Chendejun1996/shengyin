@@ -135,7 +135,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          set -x
           REPO="${{ github.repository }}"
           SHA="${{ github.sha }}"
           REF_TYPE="${{ github.ref_type }}"
@@ -153,11 +152,47 @@ jobs:
 
           ls -la release/
 
-          gh release delete "$TAG" --yes --repo "$REPO" 2>/dev/null || true
-          git push --delete origin "$TAG" 2>/dev/null || true
-
+          echo "=== 创建 Release ==="
+          
+          # 先尝试 gh release create，如果失败就回退到 API
           gh release create "$TAG" \
             --repo "$REPO" \
             --title "$TITLE" \
             --notes-file /tmp/release-notes.md \
-            release/*.{tar.gz,zip,apk} 2>&1
+            release/*.{tar.gz,zip,apk} 2>&1 || {
+            
+            echo "gh 失败，改用 API 创建..."
+            NOTES_BODY=$(cat /tmp/release-notes.md | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))" 2>/dev/null || echo '""')
+            
+            # 先删除旧的 release (如果存在)
+            curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$REPO/releases/tags/$TAG" 2>/dev/null
+            
+            # 创建 release
+            RESULT=$(curl -s -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/releases" \
+              -d "{
+                \"tag_name\": \"$TAG\",
+                \"name\": \"$TITLE\",
+                \"body\": $NOTES_BODY,
+                \"draft\": false,
+                \"prerelease\": false
+              }")
+            
+            echo "API 结果: $RESULT"
+            
+            # 获取 release ID 并上传文件
+            RELEASE_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id', ''))" 2>/dev/null)
+            if [ -n "$RELEASE_ID" ]; then
+              for f in release/*.tar.gz release/*.zip release/*.apk; do
+                [ -f "$f" ] || continue
+                echo "上传: $f"
+                curl -s -X POST \
+                  -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Content-Type: application/octet-stream" \
+                  "https://uploads.github.com/repos/$REPO/releases/$RELEASE_ID/assets?name=$(basename $f)" \
+                  --data-binary "@$f" > /dev/null
+              done
+            fi
+          }
