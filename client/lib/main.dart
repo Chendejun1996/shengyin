@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'providers/music_provider.dart';
 import 'screens/home_screen.dart';
@@ -8,9 +9,29 @@ import 'screens/search_screen.dart';
 import 'screens/settings_screen.dart';
 import 'models/models.dart';
 import 'services/api_service.dart';
+import 'services/log_service.dart';
 
 void main() {
-  runApp(const ShengyinApp());
+  // 使用 runZonedGuarded 捕获所有异步未处理异常
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // 初始化日志服务（自动注册全局错误处理器）
+    await LogService().init();
+
+    // 关闭系统默认的错误对话框（release 模式默认有）
+    if (kReleaseMode) {
+      PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+        LogService().captureGuardedError(error, stack);
+        return true;
+      };
+    }
+
+    runApp(const ShengyinApp());
+  }, (Object error, StackTrace stack) {
+    // runZonedGuarded 兜底 —— 任何未被捕获的异步异常都会到这里
+    LogService().captureGuardedError(error, stack);
+  });
 }
 
 class ShengyinApp extends StatelessWidget {

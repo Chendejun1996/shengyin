@@ -4,6 +4,9 @@ FastAPI application entry point.
 """
 import io
 import json
+import logging
+import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -19,6 +22,23 @@ from scanner import MusicScanner
 from tag_editor import TagEditor
 from streaming import stream_audio
 from scraper import MusicScraper
+
+
+# ─── 日志配置 ───
+LOG_DIR = Path("/vol1/shengyin-logs")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+log_file = LOG_DIR / f"shengyin-server-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler(str(log_file), encoding="utf-8"),
+        logging.StreamHandler(sys.stdout),  # 同时输出到控制台
+    ],
+)
+logger = logging.getLogger("shengyin")
 
 
 # --- Data Models ---
@@ -43,11 +63,33 @@ class BatchTagUpdate(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("╔═══════════════════════════════════════╗")
+    logger.info("║        笙音 ShengYin Server           ║")
+    logger.info("║        音乐库: %s          ║" % MUSIC_DIR)
+    logger.info("╚═══════════════════════════════════════╝")
     init_db()
+    logger.info("数据库初始化完成")
     yield
+    logger.info("笙音服务器关闭")
 
-app = FastAPI(title="笙音 ShengYin", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="笙音 ShengYin", version="1.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+# ─── 请求日志中间件 ───
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("→ %s %s", request.method, request.url.path)
+    try:
+        response = await call_next(request)
+        if response.status_code >= 400:
+            logger.warning("← %s %s → %d", request.method, request.url.path, response.status_code)
+        else:
+            logger.info("← %s %s → %d", request.method, request.url.path, response.status_code)
+        return response
+    except Exception as e:
+        logger.error("✗ %s %s 异常: %s", request.method, request.url.path, str(e), exc_info=True)
+        raise
 
 
 # --- Helpers ---
@@ -124,8 +166,14 @@ async def scan():
     db = get_db()
     try:
         scanner = MusicScanner(db)
+        logger.info("开始扫描音乐库: %s", MUSIC_DIR)
         result = scanner.scan()
+        logger.info("扫描完成: %s 首歌, %s 张专辑, %s 位歌手",
+                     result.get("songs", 0), result.get("albums", 0), result.get("artists", 0))
         return result
+    except Exception as e:
+        logger.error("扫描失败: %s", str(e), exc_info=True)
+        raise
     finally:
         db.close()
 
