@@ -145,7 +145,24 @@ jobs:
           if [ "$REF_TYPE" = "tag" ] && [[ "$REF_NAME" == v* ]]; then
             TAG="$REF_NAME"
             TITLE="🎵 笙音 $TAG"
-            NOTES="正式版本 $TAG — 自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)"
+            # 从 CHANGELOG.md 提取对应版本的更新内容
+            if [ -f CHANGELOG.md ]; then
+              NOTES=$(python3 -c "
+import sys, re
+tag = '$TAG'
+with open('CHANGELOG.md', 'r') as f:
+    content = f.read()
+# 找到匹配版本号及之后的文本
+pattern = r'## ' + re.escape(tag) + r'\s*\(.*?\)\n(.*?)(?=\n## |\Z)'
+match = re.search(pattern, content, re.DOTALL)
+if match:
+    print(match.group(1).strip())
+else:
+    print('自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)')
+")
+            else
+              NOTES="自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)"
+            fi
           else
             TAG="nightly"
             TITLE="🔄 Nightly 构建 $(date '+%Y-%m-%d %H:%M')"
