@@ -77,8 +77,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.29.2
-      - run: flutter create --platforms=android --project-name shengyin .
-        working-directory: client
       - run: flutter pub get
         working-directory: client
       - run: flutter build apk --release

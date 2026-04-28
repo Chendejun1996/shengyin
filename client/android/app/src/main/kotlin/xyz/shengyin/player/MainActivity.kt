@@ -1,4 +1,4 @@
-package com.example.shengyin
+package xyz.shengyin.player
 
 import io.flutter.embedding.android.FlutterActivity
 
