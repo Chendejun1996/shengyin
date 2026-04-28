@@ -136,25 +136,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          set -x  # 显示每条命令，方便排错
+          set -x
           REPO="${{ github.repository }}"
           SHA="${{ github.sha }}"
-          TAG="nightly"
+          REF_TYPE="${{ github.ref_type }}"
+          REF_NAME="${{ github.ref_name }}"
           
-          # 检查 gh 是否可用
-          which gh || echo "gh not found!"
+          # 判断是正式版本标签还是日常构建
+          if [ "$REF_TYPE" = "tag" ] && [[ "$REF_NAME" == v* ]]; then
+            TAG="$REF_NAME"
+            TITLE="🎵 笙音 $TAG"
+            NOTES="正式版本 $TAG — 自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)"
+          else
+            TAG="nightly"
+            TITLE="🔄 Nightly 构建 $(date '+%Y-%m-%d %H:%M')"
+            NOTES="自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)"
+          fi
           
-          # 确保 release 目录下有文件
           ls -la release/
           
-          # 删除旧的 nightly release+tag（gh release delete -y 也会删 tag）
-          gh release delete "$TAG" --yes --repo "$REPO" 2>&1 || echo "没有旧的 release 可删除"
-          # 确保 tag 也被清理
+          # 尝试删除旧的同名 release（如果存在）
+          gh release delete "$TAG" --yes --repo "$REPO" 2>/dev/null || true
           git push --delete origin "$TAG" 2>/dev/null || true
           
-          # 创建新 release
           gh release create "$TAG" \
             --repo "$REPO" \
-            --title "📥 最新构建 $(date '+%Y-%m-%d %H:%M')" \
-            --notes "自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)" \
+            --title "$TITLE" \
+            --notes "$NOTES" \
             release/*.{tar.gz,zip,apk} 2>&1
