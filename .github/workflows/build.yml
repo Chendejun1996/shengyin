@@ -134,14 +134,27 @@ jobs:
 
       - name: 🔖 打标签发布
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          TAG="nightly-$(date +%Y%m%d-%H%M)"
+          set -x  # 显示每条命令，方便排错
+          REPO="${{ github.repository }}"
           SHA="${{ github.sha }}"
+          TAG="nightly"
           
-          # 删除旧 nightly release（避免堆积）
-          gh release delete nightly --yes 2>/dev/null || true
-          gh release create "nightly" \
+          # 检查 gh 是否可用
+          which gh || echo "gh not found!"
+          
+          # 确保 release 目录下有文件
+          ls -la release/
+          
+          # 删除旧的 nightly release+tag（gh release delete -y 也会删 tag）
+          gh release delete "$TAG" --yes --repo "$REPO" 2>&1 || echo "没有旧的 release 可删除"
+          # 确保 tag 也被清理
+          git push --delete origin "$TAG" 2>/dev/null || true
+          
+          # 创建新 release
+          gh release create "$TAG" \
+            --repo "$REPO" \
             --title "📥 最新构建 $(date '+%Y-%m-%d %H:%M')" \
-            --notes "自动构建于 commit [$SHA](https://github.com/Chendejun1996/shengyin/commit/$SHA)" \
-            release/*.tar.gz release/*.zip release/*.apk
+            --notes "自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)" \
+            release/*.{tar.gz,zip,apk} 2>&1
