@@ -1,0 +1,13 @@
+services:
+  shengyin:
+    build: ./server
+    container_name: shengyin
+    ports:
+      - "4534:4534"
+    volumes:
+      - /vol1/@appshare/navidrome/music:/music:ro
+      - /vol1/1000/Docker/shengyin/data:/app/data
+    environment:
+      - SHENGYIN_MUSIC_DIR=/music
+      - SHENGYIN_DB_PATH=/app/data/shengyin.db
+    restart: unless-stopped
