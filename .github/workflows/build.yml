@@ -144,11 +144,11 @@ jobs:
           if [ "$REF_TYPE" = "tag" ] && [[ "$REF_NAME" == v* ]]; then
             TAG="$REF_NAME"
             TITLE="🎵 笙音 $TAG"
-            NOTES=$(python3 scripts/extract_changelog.py "$TAG")
+            python3 scripts/extract_changelog.py "$TAG" > /tmp/release-notes.md
           else
             TAG="nightly"
             TITLE="🔄 Nightly 构建 $(date '+%Y-%m-%d %H:%M')"
-            NOTES=""
+            echo -n "" > /tmp/release-notes.md
           fi
 
           ls -la release/
@@ -159,5 +159,5 @@ jobs:
           gh release create "$TAG" \
             --repo "$REPO" \
             --title "$TITLE" \
-            --notes "$NOTES" \
+            --notes-file /tmp/release-notes.md \
             release/*.{tar.gz,zip,apk} 2>&1
