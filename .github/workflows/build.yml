@@ -152,16 +152,17 @@ import sys, re
 tag = '$TAG'
 with open('CHANGELOG.md', 'r') as f:
     content = f.read()
-# 找到匹配版本号及之后的文本
 pattern = r'## ' + re.escape(tag) + r'\s*\(.*?\)\n(.*?)(?=\n## |\Z)'
 match = re.search(pattern, content, re.DOTALL)
 if match:
-    print(match.group(1).strip())
+    body = match.group(1).strip()
+    # 去掉引用格式
+    print(body)
 else:
-    print('自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)')
+    print('')
 ")
             else
-              NOTES="自动构建于 commit [$SHA](${{ github.server_url }}/$REPO/commit/$SHA)"
+              NOTES=""
             fi
           else
             TAG="nightly"
