@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ─── Linux ────────────────────────────────────────────
   linux:
     name: 🐧 Linux
     runs-on: ubuntu-latest
@@ -27,9 +26,8 @@ jobs:
         with:
           name: shengyin-linux
           path: client/build/linux/x64/release/bundle/
-          retention-days: 30
+          retention-days: 7
 
-  # ─── Windows ──────────────────────────────────────────
   windows:
     name: 🪟 Windows
     runs-on: windows-latest
@@ -48,9 +46,8 @@ jobs:
         with:
           name: shengyin-windows
           path: client/build/windows/x64/runner/Release/
-          retention-days: 30
+          retention-days: 7
 
-  # ─── macOS ────────────────────────────────────────────
   macos:
     name: 🍎 macOS
     runs-on: macos-latest
@@ -70,9 +67,8 @@ jobs:
         with:
           name: shengyin-macos
           path: client/build/macos/Build/Products/Release/
-          retention-days: 30
+          retention-days: 7
 
-  # ─── Android APK ──────────────────────────────────────
   android:
     name: 📱 Android
     runs-on: ubuntu-latest
@@ -81,6 +77,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.29.2
+      - run: flutter create --platforms=android --project-name shengyin .
+        working-directory: client
       - run: flutter pub get
         working-directory: client
       - run: flutter build apk --release
@@ -89,9 +87,8 @@ jobs:
         with:
           name: shengyin-android
           path: client/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+          retention-days: 7
 
-  # ─── iOS (仅 tag 发布时触发) ─────────────────────────
   ios:
     name: 📱 iOS
     if: startsWith(github.ref, 'refs/tags/')
@@ -111,25 +108,40 @@ jobs:
         with:
           name: shengyin-ios
           path: client/build/ios/iphoneos/
-          retention-days: 30
+          retention-days: 7
 
-  # ─── 打包全部发布版 ─────────────────────────────────
-  release:
-    name: 📦 发布
+  # ─── 发布到 Releases 页面 ─────────────────────────────
+  publish:
+    name: 📦 发布到 Release
     needs: [linux, windows, macos, android]
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
-      - run: |
-          mkdir release
-          mv shengyin-linux release/shengyin-linux
-          mv shengyin-windows release/shengyin-windows
-          mv shengyin-macos release/shengyin-macos
-          cp shengyin-android/app-release.apk release/shengyin-v${{ github.ref_name }}.apk
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: release/*
-          generate_release_notes: true
+
+      - name: 准备文件
+        run: |
+          mkdir -p release
+          # Linux
+          cd shengyin-linux && tar czf ../release/shengyin-linux-x64.tar.gz . && cd ..
+          # Windows
+          cd shengyin-windows && zip -r ../release/shengyin-windows-x64.zip . && cd ..
+          # macOS
+          cd shengyin-macos && zip -r ../release/shengyin-macos.zip . && cd ..
+          # Android
+          cp shengyin-android/app-release.apk release/shengyin-android.apk
+
+      - name: 🔖 打标签发布
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="nightly-$(date +%Y%m%d-%H%M)"
+          SHA="${{ github.sha }}"
+          
+          # 删除旧 nightly release（避免堆积）
+          gh release delete nightly --yes 2>/dev/null || true
+          gh release create "nightly" \
+            --title "📥 最新构建 $(date '+%Y-%m-%d %H:%M')" \
+            --notes "自动构建于 commit [$SHA](https://github.com/Chendejun1996/shengyin/commit/$SHA)" \
+            release/*.tar.gz release/*.zip release/*.apk
