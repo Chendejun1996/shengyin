@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import '../models/models.dart';
 import 'tag_editor_screen.dart';
+import '../extensions.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});

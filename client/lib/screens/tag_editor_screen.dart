@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import '../models/models.dart';
+import '../extensions.dart';
 
 class TagEditorScreen extends StatefulWidget {
   final Song song;

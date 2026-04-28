@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import '../models/models.dart';
 import 'album_detail_screen.dart';
 import 'artist_detail_screen.dart';
 import 'tag_editor_screen.dart';
+import '../extensions.dart';
+import '../providers/music_provider.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});

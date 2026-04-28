@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import 'tag_editor_screen.dart';
+import '../extensions.dart';
 
 class ArtistDetailScreen extends StatefulWidget {
   final int artistId;

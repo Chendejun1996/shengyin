@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import '../providers/music_provider.dart';
 import '../models/models.dart';
 import 'album_detail_screen.dart';
 import 'artist_detail_screen.dart';
+import '../extensions.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

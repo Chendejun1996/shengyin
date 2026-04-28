@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+
 import '../models/models.dart';
+import '../extensions.dart';
 
 class AlbumDetailScreen extends StatefulWidget {
   final int albumId;

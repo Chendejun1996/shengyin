@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'providers/music_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/library_screen.dart';
-import 'screens/album_detail_screen.dart';
-import 'screens/artist_detail_screen.dart';
 import 'screens/tag_editor_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/settings_screen.dart';
+import 'models/models.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -205,55 +205,4 @@ class _PlayerBar extends StatelessWidget {
       ),
     );
   }
-}
-
-class ChangeNotifierProvider extends StatefulWidget {
-  final Widget Function(BuildContext) create;
-  final Widget child;
-  const ChangeNotifierProvider({super.key, required this.create, required this.child});
-
-  @override
-  State<ChangeNotifierProvider> createState() => _ChangeNotifierProviderState();
-}
-
-class _ChangeNotifierProviderState extends State<ChangeNotifierProvider> {
-  late MusicProvider _provider;
-
-  @override
-  void initState() {
-    super.initState();
-    _provider = widget.create(context);
-    _provider.addListener(_onChanged);
-  }
-
-  void _onChanged() => setState(() {});
-
-  @override
-  void dispose() {
-    _provider.removeListener(_onChanged);
-    _provider.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MusicProviderInherited(provider: _provider, child: widget.child);
-  }
-}
-
-class MusicProviderInherited extends InheritedWidget {
-  final MusicProvider provider;
-  const MusicProviderInherited({super.key, required this.provider, required super.child});
-
-  static MusicProvider of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<MusicProviderInherited>()!.provider;
-  }
-
-  @override
-  bool updateShouldNotify(covariant MusicProviderInherited oldWidget) => provider != oldWidget.provider;
-}
-
-// Extension for Consumer-like usage
-extension MusicContext on BuildContext {
-  MusicProvider get music => MusicProviderInherited.of(this);
 }
