@@ -12,6 +12,53 @@
 
 ---
 
+## 📢 最新更新
+
+<details open>
+<summary><b>v1.1.0</b> (2026-04-28) — 自动日志 + APK 签名修复 ⭐</summary>
+
+✨ **新功能**
+- 自动本地日志：App 崩溃或网络异常自动保存日志到设备本地文件
+- 设置页新增「日志管理」模块，支持查看和分享日志
+- 后端所有请求自动记录日志文件
+
+🔧 **优化**
+- ✅ 修复 Android APK 签名不一致问题，以后更新**无需卸载重装**
+- ✅ Release 页面自动显示详细更新内容
+
+</details>
+
+<details>
+<summary><b>v1.0.2</b> (2026-04-28) — 修复 Android 闪退</summary>
+
+🐛 **Bug 修复**
+- 修复 Android 闪退：MainActivity 包名路径与构建配置不一致
+- 移除了 CI 中 Android 的重新生成步骤
+
+</details>
+
+<details>
+<summary><b>v1.0.1</b> (2026-04-28) — 网络权限修复</summary>
+
+🐛 **Bug 修复**
+- 添加 INTERNET 权限
+- 开放 HTTP 明文连接支持
+- 应用名改为「笙音」
+
+</details>
+
+<details>
+<summary><b>v1.0.0</b> (2026-04-28) — 首个正式版 🎉</summary>
+
+- 音乐流媒体播放 · 专辑浏览 · 歌手页面
+- 音频标签编辑（标题/歌手/专辑/封面/歌词）
+- MusicBrainz 自动刮削
+- 跨平台：Android / iOS / Windows / Linux / macOS
+
+</details>
+
+---
+
 ## 🌟 为什么做笙音？
 
 [Navidrome](https://github.com/navidrome/navidrome) 有着漂亮的播放界面，但缺少标签编辑功能；[music-tag-web](https://github.com/xhongc/music-tag-web) 能编辑标签，却没有播放器。
