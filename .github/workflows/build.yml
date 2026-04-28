@@ -38,6 +38,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.29.2
+      - run: flutter create --platforms=windows --project-name shengyin .
+        working-directory: client
       - run: flutter pub get
         working-directory: client
       - run: flutter build windows --release
@@ -57,6 +59,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.29.2
+      - run: flutter create --platforms=macos --project-name shengyin .
+        working-directory: client
       - run: flutter config --enable-macos-desktop
       - run: flutter pub get
         working-directory: client
@@ -97,6 +101,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.29.2
+      - run: flutter create --platforms=ios --project-name shengyin .
+        working-directory: client
       - run: flutter pub get
         working-directory: client
       - run: flutter build ios --release --no-codesign
