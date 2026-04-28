@@ -1,0 +1,129 @@
+name: 编译所有平台客户端
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  # ─── Linux ────────────────────────────────────────────
+  linux:
+    name: 🐧 Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.2
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: flutter pub get
+        working-directory: client
+      - run: flutter build linux --release
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shengyin-linux
+          path: client/build/linux/x64/release/bundle/
+          retention-days: 30
+
+  # ─── Windows ──────────────────────────────────────────
+  windows:
+    name: 🪟 Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.2
+      - run: flutter pub get
+        working-directory: client
+      - run: flutter build windows --release
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shengyin-windows
+          path: client/build/windows/x64/runner/Release/
+          retention-days: 30
+
+  # ─── macOS ────────────────────────────────────────────
+  macos:
+    name: 🍎 macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.2
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+        working-directory: client
+      - run: flutter build macos --release
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shengyin-macos
+          path: client/build/macos/Build/Products/Release/
+          retention-days: 30
+
+  # ─── Android APK ──────────────────────────────────────
+  android:
+    name: 📱 Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.2
+      - run: flutter pub get
+        working-directory: client
+      - run: flutter build apk --release
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shengyin-android
+          path: client/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+  # ─── iOS (仅 tag 发布时触发) ─────────────────────────
+  ios:
+    name: 📱 iOS
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.2
+      - run: flutter pub get
+        working-directory: client
+      - run: flutter build ios --release --no-codesign
+        working-directory: client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shengyin-ios
+          path: client/build/ios/iphoneos/
+          retention-days: 30
+
+  # ─── 打包全部发布版 ─────────────────────────────────
+  release:
+    name: 📦 发布
+    needs: [linux, windows, macos, android]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: |
+          mkdir release
+          mv shengyin-linux release/shengyin-linux
+          mv shengyin-windows release/shengyin-windows
+          mv shengyin-macos release/shengyin-macos
+          cp shengyin-android/app-release.apk release/shengyin-v${{ github.ref_name }}.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true

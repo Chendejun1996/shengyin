@@ -6,6 +6,7 @@
     <img src="https://img.shields.io/badge/python-3.11+-green.svg" alt="Python">
     <img src="https://img.shields.io/badge/flutter-3.x-blue.svg" alt="Flutter">
     <img src="https://img.shields.io/badge/platform-android%20%7C%20ios%20%7C%20windows%20%7C%20linux%20%7C%20macos-brightgreen" alt="Platform">
+    <img src="https://github.com/Chendejun1996/shengyin/actions/workflows/build.yml/badge.svg" alt="Build">
   </p>
 </div>
 
