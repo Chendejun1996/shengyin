@@ -12,24 +12,9 @@
 
 ---
 
-## 📢 版本历史
+## 📢 最新更新
 
 <details open>
-<summary><b>v1.0.2</b> (2026-04-28) — 首个正式发布版 🎉</summary>
-
-- 音乐流媒体播放 · 专辑浏览 · 歌手页面
-- 音频标签编辑（标题/歌手/专辑/封面/歌词）
-- MusicBrainz 自动刮削
-- 跨平台：Android / iOS / Windows / Linux / macOS
-
-🐛 **Bug 修复**
-- 修复 Android 闪退：MainActivity 包名路径与构建配置不一致
-- 添加 INTERNET 权限
-- 开放 HTTP 明文连接支持
-
-</details>
-
-<details>
 <summary><b>v1.1.0</b> (2026-04-28) — 自动日志 + APK 签名修复 ⭐</summary>
 
 ✨ **新功能**
@@ -41,6 +26,21 @@
 - ✅ 修复 Android APK 签名不一致问题，以后更新**无需卸载重装**
 - ✅ Release 页面自动显示详细更新内容
 - ✅ 首页 README 直接显示版本更新记录
+
+</details>
+
+<details>
+<summary><b>v1.0.2</b> (2026-04-28) — 首个正式发布版 🎉</summary>
+
+- 音乐流媒体播放 · 专辑浏览 · 歌手页面
+- 音频标签编辑（标题/歌手/专辑/封面/歌词）
+- MusicBrainz 自动刮削
+- 跨平台：Android / iOS / Windows / Linux / macOS
+
+🐛 **Bug 修复**
+- 修复 Android 闪退：MainActivity 包名路径与构建配置不一致
+- 添加 INTERNET 权限
+- 开放 HTTP 明文连接支持
 
 </details>
 
