@@ -27,14 +27,18 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("shengyin-keystore.jks")
+            storePassword = "shengyin123"
+            keyAlias = "shengyin"
+            keyPassword = "shengyin123"
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.create("release") {
-                storeFile = file("shengyin-keystore.jks")
-                storePassword = "shengyin123"
-                keyAlias = "shengyin"
-                keyPassword = "shengyin123"
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
