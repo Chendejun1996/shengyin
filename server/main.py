@@ -72,7 +72,7 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("笙音服务器关闭")
 
-app = FastAPI(title="笙音 ShengYin", version="1.1.0", lifespan=lifespan)
+app = FastAPI(title="笙音 ShengYin", version="1.1.1", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
@@ -142,7 +142,7 @@ def _artist_to_dict(artist: Artist) -> dict:
 
 @app.get("/api/ping")
 async def ping():
-    return {"status": "ok", "version": "0.1.0", "name": "笙音 ShengYin"}
+    return {"status": "ok", "version": "1.1.1", "name": "笙音 ShengYin"}
 
 
 @app.get("/api/stats")
