@@ -78,7 +78,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(6),
                             child: Container(width: 48, height: 48, color: Colors.grey[800],
-                              child: album.hasCover ? Image.network('${provider.api.baseUrl}/api/cover/${album.id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album)) : const Icon(Icons.album)),
+                              child: album.hasCover ? Image.network('${provider.api.baseUrl}/api/cover/album/${album.id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album)) : const Icon(Icons.album)),
                           ),
                           title: Text(album.name),
                           subtitle: Text('${album.artist} · ${album.songCount} 首'),

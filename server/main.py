@@ -328,6 +328,50 @@ async def get_cover(song_id: int):
         db.close()
 
 
+@app.get("/api/cover/album/{album_id}")
+async def get_album_cover(album_id: int):
+    """Get cover art for an album — finds first song in album with cover."""
+    db = get_db()
+    try:
+        album = db.query(Album).filter(Album.id == album_id).first()
+        if not album:
+            raise HTTPException(status_code=404, detail="Album not found")
+        # Find first song in this album that has a cover
+        song = db.query(Song).filter(
+            Song.album == album.name,
+            Song.album_artist == album.album_artist,
+            Song.has_cover == True,
+        ).first()
+        if not song:
+            # Fallback — any song in the album
+            song = db.query(Song).filter(
+                Song.album == album.name,
+                Song.album_artist == album.album_artist,
+            ).first()
+        if not song:
+            raise HTTPException(status_code=404, detail="No songs in album")
+        # Reuse song cover logic
+        p = Path(song.path)
+        for cover_name in ("cover.jpg", "cover.png", "folder.jpg", "folder.png"):
+            cover = p.parent / cover_name
+            if cover.exists():
+                ext = cover.suffix.lower()
+                mime = "image/jpeg" if ext in (".jpg", ".jpeg") else "image/png"
+                return Response(content=cover.read_bytes(), media_type=mime)
+        from mutagen import File as MutagenFile
+        audio = MutagenFile(song.path)
+        if audio:
+            if "APIC:" in audio:
+                apic = audio["APIC:"]
+                return Response(content=apic.data, media_type=apic.mime)
+            if "covr" in audio and audio["covr"]:
+                data = audio["covr"][0]
+                return Response(content=data if isinstance(data, bytes) else data[1], media_type="image/jpeg")
+        raise HTTPException(status_code=404, detail="No cover art found")
+    finally:
+        db.close()
+
+
 # --- Tag Editor Routes ---
 
 @app.get("/api/tags/{song_id}")

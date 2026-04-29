@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../providers/music_provider.dart';
 import '../models/models.dart';
 import '../extensions.dart';
 
@@ -13,15 +14,14 @@ class AlbumDetailScreen extends StatefulWidget {
 
 class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.music.loadSongs(albumId: widget.albumId));
-  }
-
-  @override
   Widget build(BuildContext context) {
     final provider = context.music;
     final theme = Theme.of(context);
+
+    // Load songs lazily — not in initState to avoid Provider lookup issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      provider.loadSongs(albumId: widget.albumId);
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.albumName)),
@@ -40,7 +40,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                           width: 160, height: 160,
                           color: Colors.grey[800],
                           child: widget.albumId > 0
-                              ? Image.network('${provider.api.baseUrl}/api/cover/${widget.albumId}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album, size: 64))
+                              ? Image.network('${provider.api.baseUrl}/api/cover/album/${widget.albumId}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album, size: 64))
                               : const Icon(Icons.album, size: 64),
                         ),
                       ),

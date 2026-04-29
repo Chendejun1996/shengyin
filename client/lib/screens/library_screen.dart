@@ -63,7 +63,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                         width: 56, height: 56,
                         color: Colors.grey[800],
                         child: provider.albums[i].hasCover
-                            ? Image.network('${provider.api.baseUrl}/api/cover/${provider.albums[i].id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album))
+                            ? Image.network('${provider.api.baseUrl}/api/cover/album/${provider.albums[i].id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.album))
                             : const Icon(Icons.album, color: Colors.grey),
                       ),
                     ),

@@ -151,7 +151,7 @@ class _AlbumCard extends StatelessWidget {
                 color: Colors.grey[800],
                 child: album.hasCover && album.id > 0
                     ? Image.network(
-                        '${context.music.api.baseUrl}/api/cover/${album.id}',
+                        '${context.music.api.baseUrl}/api/cover/album/${album.id}',
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(Icons.album, size: 48, color: Colors.grey),
                       )
