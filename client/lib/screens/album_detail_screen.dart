@@ -13,15 +13,26 @@ class AlbumDetailScreen extends StatefulWidget {
 }
 
 class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  void _load() {
+    if (_loaded) return;
+    _loaded = true;
+    try {
+      context.music.loadSongs(albumId: widget.albumId);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.music;
     final theme = Theme.of(context);
-
-    // Load songs lazily — not in initState to avoid Provider lookup issues
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      provider.loadSongs(albumId: widget.albumId);
-    });
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.albumName)),
@@ -61,7 +72,9 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                 const Divider(),
                 // Song list
                 Expanded(
-                  child: ListView.builder(
+                  child: provider.songs.isEmpty
+                      ? const Center(child: Text('暂无歌曲'))
+                      : ListView.builder(
                     itemCount: provider.songs.length,
                     itemBuilder: (_, i) {
                       final song = provider.songs[i];

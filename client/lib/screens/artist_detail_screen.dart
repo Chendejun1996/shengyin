@@ -12,10 +12,20 @@ class ArtistDetailScreen extends StatefulWidget {
 }
 
 class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
+  bool _loaded = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.music.loadSongs(artistId: widget.artistId));
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  void _load() {
+    if (_loaded) return;
+    _loaded = true;
+    try {
+      context.music.loadSongs(artistId: widget.artistId);
+    } catch (_) {}
   }
 
   @override
@@ -23,40 +33,42 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
     final provider = context.music;
     return Scaffold(
       appBar: AppBar(title: Text(widget.artistName)),
-      body: provider.songs.isEmpty
-          ? const Center(child: Text('暂无歌曲'))
-          : ListView.builder(
-              itemCount: provider.songs.length,
-              itemBuilder: (_, i) {
-                final song = provider.songs[i];
-                return ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      width: 40, height: 40, color: Colors.grey[800],
-                      child: song.hasCover
-                          ? Image.network('${provider.api.baseUrl}/api/cover/${song.id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.music_note))
-                          : const Icon(Icons.music_note, color: Colors.grey),
-                    ),
-                  ),
-                  title: Text(song.title),
-                  subtitle: Text(song.album),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'edit') {
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => TagEditorScreen(song: song),
-                        ));
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(value: 'edit', child: Text('编辑标签')),
-                    ],
-                  ),
-                  onTap: () => provider.playSong(song, queue: provider.songs),
-                );
-              },
-            ),
+      body: provider.loading
+          ? const Center(child: CircularProgressIndicator())
+          : provider.songs.isEmpty
+              ? const Center(child: Text('暂无歌曲'))
+              : ListView.builder(
+                  itemCount: provider.songs.length,
+                  itemBuilder: (_, i) {
+                    final song = provider.songs[i];
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          width: 40, height: 40, color: Colors.grey[800],
+                          child: song.hasCover
+                              ? Image.network('${provider.api.baseUrl}/api/cover/${song.id}', fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.music_note))
+                              : const Icon(Icons.music_note, color: Colors.grey),
+                        ),
+                      ),
+                      title: Text(song.title),
+                      subtitle: Text(song.album),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (v) {
+                          if (v == 'edit') {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => TagEditorScreen(song: song),
+                            ));
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          const PopupMenuItem(value: 'edit', child: Text('编辑标签')),
+                        ],
+                      ),
+                      onTap: () => provider.playSong(song, queue: provider.songs),
+                    );
+                  },
+                ),
     );
   }
 }
