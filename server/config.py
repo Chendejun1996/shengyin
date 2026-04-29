@@ -4,8 +4,8 @@
 import os
 from pathlib import Path
 
-# 音乐目录 — 默认指向 Navidrome 已有的音乐库
-MUSIC_DIR = Path(os.environ.get("SHENGYIN_MUSIC_DIR", "/vol1/@appshare/navidrome/music"))
+# 音乐目录
+MUSIC_DIR = Path(os.environ.get("SHENGYIN_MUSIC_DIR", "/vol1/1000/Docker/shengyin/music"))
 
 # 数据库
 DB_PATH = Path(os.environ.get("SHENGYIN_DB_PATH", "/vol1/1000/Docker/shengyin/data/shengyin.db"))

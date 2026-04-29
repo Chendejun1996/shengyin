@@ -58,23 +58,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Quick scan button
-            FilledButton.icon(
+            // Refresh button (loads stats, not scan)
+            IconButton(
+              icon: const Icon(Icons.refresh),
               onPressed: () async {
-                await provider.api.scan();
+                await provider.loadStats();
                 await provider.loadAlbums();
                 await provider.loadArtists();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('扫描完成')),
+                    const SnackBar(content: Text('已刷新')),
                   );
                 }
               },
-              icon: const Icon(Icons.refresh),
-              label: const Text('扫描音乐库'),
-              style: FilledButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
             // Recent albums
             Text('专辑', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
@@ -82,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(
               height: 200,
               child: provider.albums.isEmpty
-                  ? const Center(child: Text('暂无专辑，请先扫描音乐库'))
+                  ? const Center(child: Text('暂无专辑，下拉刷新加载'))
                   : ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: provider.albums.length,

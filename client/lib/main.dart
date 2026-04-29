@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/music_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/library_screen.dart';
@@ -47,7 +48,58 @@ class ServerConfigScreen extends StatefulWidget {
 }
 
 class _ServerConfigScreenState extends State<ServerConfigScreen> {
-  final _urlController = TextEditingController(text: 'http://192.168.1.100:4534');
+  final _urlController = TextEditingController();
+  bool _connecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedUrl();
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSavedUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedUrl = prefs.getString('server_url');
+    if (savedUrl != null && savedUrl.isNotEmpty) {
+      _urlController.text = savedUrl;
+      // Auto-connect if we have a saved URL
+      _connect();
+    } else {
+      _urlController.text = 'http://192.168.10.106:4534';
+    }
+  }
+
+  Future<void> _connect() async {
+    final url = _urlController.text.trim();
+    if (url.isEmpty) return;
+    setState(() => _connecting = true);
+
+    final api = ApiService(url);
+    try {
+      final pong = await api.ping();
+      if (!mounted) return;
+
+      // Save URL for next launch
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('server_url', url);
+
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (_) => MainApp(api: api),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _connecting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('连接失败: $e\n请检查服务器地址是否正确')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,22 +114,25 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
               const SizedBox(height: 16),
               Text('笙音', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text('连接你的音乐服务器', style: Theme.of(context).textTheme.bodyLarge),
+              Text(_connecting ? '正在连接...' : '连接你的音乐服务器', style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 32),
               TextField(
                 controller: _urlController,
+                enabled: !_connecting,
                 decoration: const InputDecoration(
                   labelText: '服务器地址',
-                  hintText: 'http://192.168.1.100:4534',
+                  hintText: 'http://192.168.10.106:4534',
                   prefixIcon: Icon(Icons.link),
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: _connect,
-                icon: const Icon(Icons.cable),
-                label: const Text('连接'),
+                onPressed: _connecting ? null : _connect,
+                icon: _connecting
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.cable),
+                label: Text(_connecting ? '连接中...' : '连接'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),
@@ -87,24 +142,6 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _connect() async {
-    final url = _urlController.text.trim();
-    if (url.isEmpty) return;
-    final api = ApiService(url);
-    try {
-      final pong = await api.ping();
-      if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(
-        builder: (_) => MainApp(api: api),
-      ));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('连接失败: $e')),
-      );
-    }
   }
 }
 
@@ -205,7 +242,12 @@ class _PlayerBar extends StatelessWidget {
           ),
           IconButton(icon: const Icon(Icons.skip_previous), onPressed: provider.prevSong, iconSize: 20),
           IconButton(
-            icon: Icon(provider.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
+            icon: provider.playerLoading
+                ? const SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(provider.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
             onPressed: provider.togglePlay,
             iconSize: 36,
           ),
